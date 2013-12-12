@@ -198,7 +198,7 @@ int flat_con_connect(db_con_t* con)
 			fclose(fcon->file[i].f);
 		}
 		if (fcon->file[i].filename) pkg_free(fcon->file[i].filename);
-		if ((fcon->file[i].filename = get_filename(&furi->path, fcon->file[i].table)) == NULL)
+		if ((fcon->file[i].filename = get_filename(&furi->path, &fcon->file[i].table)) == NULL)
 			goto no_mem;
 		fcon->file[i].f = fopen(fcon->file[i].filename, "a");
 		if (fcon->file[i].f == NULL) {
