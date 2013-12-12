@@ -43,6 +43,56 @@
 #include <string.h>
 #include <errno.h>
 
+/* returns a pkg_malloc'ed file name */
+static char* get_filename(str* dir, str* name)
+{
+    char* buf, *p;
+    int buf_len, total_len;
+
+    buf_len = pathmax();
+
+    total_len = dir->len + 1 /* / */ + 
+		name->len + 1 /* _ */+ 11 /* _ + unix time length */+
+		flat_pid.len +
+		flat_suffix.len + 1 /* \0 */;
+
+    if (buf_len < total_len) {
+        ERR("flatstore: The path is too long (%d and PATHMAX is %d)\n",
+            total_len, buf_len);
+        return 0;
+    }
+
+    if ((buf = pkg_malloc(buf_len)) == NULL) {
+        ERR("flatstore: No memory left\n");
+        return 0;
+    }
+    p = buf;
+
+    memcpy(p, dir->s, dir->len);
+    p += dir->len;
+
+    *p++ = '/';
+
+    memcpy(p, name->s, name->len);
+    p += name->len;
+
+    *p++ = '_';
+		
+	sprintf(p,"%ld",(long)*flat_rotate);
+	p += 10; /* 10 size is valid for a long long time */
+	
+    *p++ = '_';
+	
+
+    memcpy(p, flat_pid.s, flat_pid.len);
+    p += flat_pid.len;
+
+    memcpy(p, flat_suffix.s, flat_suffix.len);
+    p += flat_suffix.len;
+
+    *p = '\0';
+    return buf;
+}
 
 /** Free all memory allocated for a flat_con structure.
  * This function function frees all memory that is in use by
@@ -148,7 +198,7 @@ int flat_con_connect(db_con_t* con)
 			fclose(fcon->file[i].f);
 		}
 		if (fcon->file[i].filename) pkg_free(fcon->file[i].filename);
-		if ((fcon->file[i].filename = get_filename(&furi->path, name)) == NULL)
+		if ((fcon->file[i].filename = get_filename(&furi->path, fcon->file[i].table)) == NULL)
 			goto no_mem;
 		fcon->file[i].f = fopen(fcon->file[i].filename, "a");
 		if (fcon->file[i].f == NULL) {
@@ -188,56 +238,6 @@ void flat_con_disconnect(db_con_t* con)
 }
 
 
-/* returns a pkg_malloc'ed file name */
-static char* get_filename(str* dir, str* name)
-{
-    char* buf, *p;
-    int buf_len, total_len;
-
-    buf_len = pathmax();
-
-    total_len = dir->len + 1 /* / */ + 
-		name->len + 1 /* _ */+ 11 /* _ + unix time length */+
-		flat_pid.len +
-		flat_suffix.len + 1 /* \0 */;
-
-    if (buf_len < total_len) {
-        ERR("flatstore: The path is too long (%d and PATHMAX is %d)\n",
-            total_len, buf_len);
-        return 0;
-    }
-
-    if ((buf = pkg_malloc(buf_len)) == NULL) {
-        ERR("flatstore: No memory left\n");
-        return 0;
-    }
-    p = buf;
-
-    memcpy(p, dir->s, dir->len);
-    p += dir->len;
-
-    *p++ = '/';
-
-    memcpy(p, name->s, name->len);
-    p += name->len;
-
-    *p++ = '_';
-		
-	sprintf(p,"%ld",(long)*flat_rotate);
-	p += 10; /* 10 size is valid for a long long time */
-	
-    *p++ = '_';
-	
-
-    memcpy(p, flat_pid.s, flat_pid.len);
-    p += flat_pid.len;
-
-    memcpy(p, flat_suffix.s, flat_suffix.len);
-    p += flat_suffix.len;
-
-    *p = '\0';
-    return buf;
-}
 
 
 
