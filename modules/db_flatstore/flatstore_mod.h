@@ -39,10 +39,12 @@
 
 extern str     flat_pid;
 extern int     flat_flush;
+extern int     flat_cdrtimer;
 extern str     flat_record_delimiter;
 extern str     flat_delimiter;
 extern str     flat_escape;
 extern str     flat_suffix;
+extern str     flat_closed_suffix;
 extern time_t* flat_rotate;
 extern time_t  flat_local_timestamp;
 

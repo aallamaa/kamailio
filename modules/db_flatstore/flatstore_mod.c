@@ -64,6 +64,11 @@ str flat_pid = STR_NULL;
 /** Enable/disable flushing after eaach write. */
 int flat_flush = 1;
 
+/** time interval in sec for time based CDR genaration 
+by default value 0 mean it is not generating time based CDRs
+**/
+
+int flat_cdrtimer = 0;
 
 /** Row delimiter.
  * The character in this variable will be used to delimit rows.
@@ -118,6 +123,7 @@ static cmd_export_t cmds[] = {
 /* Exported parameters */
 static param_export_t params[] = {
 	{"flush",            PARAM_INT, &flat_flush},
+	{"cdrtimer",         PARAM_INT, &flat_cdrtimer},
 	{"field_delimiter",  PARAM_STR, &flat_delimiter},
 	{"record_delimiter", PARAM_STR, &flat_record_delimiter},
 	{"escape_char",      PARAM_STR, &flat_escape},

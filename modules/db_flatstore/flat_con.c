@@ -123,10 +123,12 @@ int flat_con(db_con_t* con)
 
 int flat_con_connect(db_con_t* con)
 {
+	struct flat_uri* furi;
 	struct flat_con* fcon;
 	int i;
 	
 	fcon = DB_GET_PAYLOAD(con);
+	furi = DB_GET_PAYLOAD(con->uri);
 	
 	/* Do not reconnect already connected connections */
 	if (fcon->flags & FLAT_OPENED) return 0;
@@ -145,6 +147,9 @@ int flat_con_connect(db_con_t* con)
 		if (fcon->file[i].f) {
 			fclose(fcon->file[i].f);
 		}
+		if (fcon->file[i].filename) pkg_free(fcon->file[i].filename);
+		if ((fcon->file[i].filename = get_filename(&furi->path, name)) == NULL)
+			goto no_mem;
 		fcon->file[i].f = fopen(fcon->file[i].filename, "a");
 		if (fcon->file[i].f == NULL) {
 			ERR("flatstore: Error while opening file handle to '%s': %s\n", 
@@ -155,7 +160,9 @@ int flat_con_connect(db_con_t* con)
 
 	fcon->flags |= FLAT_OPENED;
 	return 0;
-
+no_mem:
+   	ERR("flatstore: No memory left\n");
+   	return -1;
 }
 
 
@@ -190,7 +197,7 @@ static char* get_filename(str* dir, str* name)
     buf_len = pathmax();
 
     total_len = dir->len + 1 /* / */ + 
-		name->len + 1 /* _ */+
+		name->len + 1 /* _ */+ 11 /* _ + unix time length */+
 		flat_pid.len +
 		flat_suffix.len + 1 /* \0 */;
 
@@ -215,6 +222,12 @@ static char* get_filename(str* dir, str* name)
     p += name->len;
 
     *p++ = '_';
+		
+	sprintf(p,"%ld",(long)*flat_rotate);
+	p += 10; /* 10 size is valid for a long long time */
+	
+    *p++ = '_';
+	
 
     memcpy(p, flat_pid.s, flat_pid.len);
     p += flat_pid.len;
