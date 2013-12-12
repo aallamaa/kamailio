@@ -200,6 +200,7 @@ int flat_con_connect(db_con_t* con)
 		if (fcon->file[i].filename) pkg_free(fcon->file[i].filename);
 		if ((fcon->file[i].filename = get_filename(&furi->path, &fcon->file[i].table)) == NULL)
 			goto no_mem;
+		LOG(L_WARN, "WARNING: flat_rotate filename %s \n",fcon->file[i].filename);
 		fcon->file[i].f = fopen(fcon->file[i].filename, "a");
 		if (fcon->file[i].f == NULL) {
 			ERR("flatstore: Error while opening file handle to '%s': %s\n", 
@@ -267,7 +268,7 @@ int flat_open_table(int* idx, db_con_t* con, str* name)
 		 */
 		if ((filename = get_filename(&furi->path, name)) == NULL)
 			goto no_mem;
-
+		LOG(L_WARN, "WARNING: flat_rotate filename %s \n",filename);
 		if ((table = pkg_malloc(name->len)) == NULL) goto no_mem;
 		memcpy(table, name->s, name->len);
 
